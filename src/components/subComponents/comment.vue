@@ -2,16 +2,15 @@
   <div class="cmt-container">
     <h3>评论 {{id}} {{idd}} </h3>
     <hr>
-    <textarea placeholder="请输入要吐槽的内容（最多200字）" maxlength="200"></textarea>
-    <mt-button type="primary" size="large">发表评论</mt-button>
+    <textarea placeholder="请输入要吐槽的内容（最多200字）" maxlength="200" v-model="msg"></textarea>
+    <mt-button type="primary" size="large" @click="send">发表评论</mt-button>
     <div class="cmt-list">
       <div class="cmt-item"   v-for="(item,i) in comments" :key = item.add_time >
-      {{item}}
         <div class="cmt-title">
-        第{{i+1}}楼 用户：{{item.user_name}} ；发表时间：{{item.addtime | resetDate}}
+        第{{i+1}}楼 用户：{{item.user_name}} ；发表时间：{{item.add_time | resetDate}}
         </div>
         <div class="cmt-body">
-          {{item.content === 'undefind' ? '此用户暂无评论' : item.content}}
+          {{item.content === 'undefind' ? '此用户暂无评论' : item.content }}
         </div>
       </div>
     </div>
@@ -27,11 +26,13 @@ export default {
     return{
       idd: this.$route.params.id,
       comments: [],
-      pageIndex: 1
+      pageIndex: 1,
+      msg: ''
     }
   },
   created(){
     this.getNewsComent();
+    console.log(this.comments);
   },
   methods: {
     getNewsComent(){
@@ -47,6 +48,23 @@ export default {
     getMore(){
       this.pageIndex++;
       this.getNewsComent();
+    },
+    send(){
+      if(this.msg.trim().length===0){
+        return Toast("评论内容为空！")
+      }
+      this.$http.post('api/postcomment/'+this.id,{content: this.msg.trim()})
+      .then(function(result){
+        if(result.body.status === 0){
+          var cmt = {
+            user_name: '匿名用户',
+            add_time: Date.now(),
+            content: this.msg.trim()
+          }
+          this.comments.unshift(cmt);
+          this.msg = ''
+        }
+      })
     }
   },
   props: ['id']
